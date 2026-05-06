@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Niveis - Lecto{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-heading">
+        <h1>Niveis de leitura</h1>
+    </div>
+    <div class="level-list">
+        {% for level in levels %}
+            <a class="level-pill" href="{% url 'reading:level_detail' level.slug %}">
+                <strong>{{ level.name }}</strong>
+                <span>{{ level.min_words }}-{{ level.max_words }} palavras</span>
+            </a>
+        {% empty %}
+            <p class="empty-state">Nenhum nivel cadastrado ainda.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

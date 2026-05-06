@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - {{ text.title }}{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Quiz do texto</p>
+            <h1>{{ text.title }}</h1>
+            <p>Responda as perguntas sobre o texto para medir sua compreensao.</p>
+        </div>
+    </div>
+
+    {% if text.cover_image %}
+        <section class="quiz-artwork">
+            <img src="{{ text.cover_image.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
+        </section>
+    {% elif text.animation_asset %}
+        <section class="quiz-artwork">
+            <img src="{{ text.animation_asset.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
+        </section>
+    {% endif %}
+
+    {% if result %}
+        <div
+            class="result-panel {% if result.score >= 4 %}is-good{% else %}is-warning{% endif %}"
+            data-quiz-result
+            data-text-slug="{{ text.slug }}"
+            data-points="{{ result.coins_awarded }}"
+        >
+            <strong>{{ result.score }}/{{ result.total }} acertos</strong>
+            <span>{{ result.errors }} erros / {{ result.percentage|floatformat:0 }}%</span>
+            <span>{{ result.coins_awarded }} pontos nesta tentativa</span>
+            {% if result.score >= 4 %}
+                <p>Boa compreensao. Voce entendeu os pontos principais do texto.</p>
+            {% elif result.score == 3 %}
+                <p>Voce entendeu parte do texto. Revise o vocabulario destacado e tente novamente.</p>
+            {% else %}
+                <p>Esse texto merece uma releitura calma antes de avancar.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <form method="post" class="stack-form">
+        {% csrf_token %}
+        {% for question in questions %}
+            <fieldset class="question-block">
+                <legend>{{ forloop.counter }}. {{ question.question_text }}</legend>
+                <div class="question-options">
+                    {% for answer in question.answers.all %}
+                        <label>
+                            <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}" required>
+                            <span class="option-letter"></span>
+                            <span>{{ answer.answer_text }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+        {% empty %}
+            <p class="empty-state">As 5 perguntas deste texto ainda serao cadastradas.</p>
+        {% endfor %}
+        {% if questions %}
+            <button class="button primary" type="submit">Enviar respostas</button>
+        {% endif %}
+    </form>
+</section>
+{% endblock %}

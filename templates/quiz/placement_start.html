@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz de nivelamento - Lecto{% endblock %}
+
+{% block content %}
+<section class="quiz-shell">
+    <div class="quiz-intro">
+        <p class="eyebrow">Quiz inicial</p>
+        <h1>Descubra por onde comecar.</h1>
+        <p>Escolha um nivel, responda 7 perguntas e veja se ele combina com sua leitura atual.</p>
+    </div>
+
+    <form method="get" class="quiz-picker">
+        <label>
+            Nivel
+            <select name="nivel" required>
+                <option value="">Escolha</option>
+                {% for level in levels %}
+                    <option value="{{ level.slug }}" {% if selected_level.slug == level.slug %}selected{% endif %}>
+                        {{ level.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            Categoria opcional
+            <select name="categoria">
+                <option value="">Geral</option>
+                {% for category in categories %}
+                    <option value="{{ category.slug }}" {% if selected_category.slug == category.slug %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+        <button class="button primary" type="submit">Carregar perguntas</button>
+    </form>
+
+    {% if selected_level %}
+        <section class="section compact">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">{{ selected_level.name }}</p>
+                    <h2>Teste de 7 perguntas</h2>
+                </div>
+            </div>
+
+            {% if result %}
+                <div class="result-panel {% if result.passed %}is-good{% else %}is-warning{% endif %}">
+                    <strong>{{ result.score }}/{{ result.total }} acertos</strong>
+                    <span>{{ result.errors }} erros / {{ result.percentage|floatformat:0 }}%</span>
+                    {% if result.passed %}
+                        <p>Voce demonstrou boa leitura para {{ selected_level.name }}.</p>
+                    {% else %}
+                        <p>Esse nivel ainda pode estar pesado. Recomendacao: comece por {{ result.recommended_level.name }}.</p>
+                    {% endif %}
+                    <a class="button secondary" href="{% url 'reading:level_detail' result.recommended_level.slug %}">
+                        Ver textos recomendados
+                    </a>
+                </div>
+            {% endif %}
+
+            <form method="post" class="stack-form">
+                {% csrf_token %}
+                <input type="hidden" name="nivel" value="{{ selected_level.slug }}">
+                {% if selected_category %}
+                    <input type="hidden" name="categoria" value="{{ selected_category.slug }}">
+                {% endif %}
+
+                {% for question in questions %}
+                    <fieldset class="question-block">
+                        <legend>{{ forloop.counter }}. {{ question.question_text }}</legend>
+                        <div class="question-options">
+                            {% for answer in question.answers.all %}
+                                <label>
+                                    <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}" required>
+                                    <span class="option-letter"></span>
+                                    <span>{{ answer.answer_text }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                {% endfor %}
+
+                {% if questions %}
+                    <button class="button primary" type="submit">Ver resultado</button>
+                {% elif selected_category %}
+                    <p class="empty-state">Ainda nao existem perguntas para esse nivel e categoria.</p>
+                {% else %}
+                    <p class="empty-state">Ainda nao existem perguntas gerais para esse nivel.</p>
+                {% endif %}
+            </form>
+        </section>
+    {% endif %}
+</section>
+{% endblock %}

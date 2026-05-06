@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lecto - leitura em ingles por nivel{% endblock %}
+
+{% block content %}
+<section class="home-grid">
+    <div class="hero-panel">
+        <div class="hero-copy">
+            <p class="eyebrow">Com Alexandrinho</p>
+            <h1>Leia inglês no nível certo para você.</h1>
+            <p>
+                Textos curtos, quiz funcional e vocabulario destacado para praticar sem travar.
+                Comece pelo nivelamento ou explore por categoria.
+            </p>
+            <div class="hero-actions">
+                <a class="button primary" href="{% url 'quiz:placement_start' %}">Fazer quiz</a>
+                <a class="button secondary" href="{% url 'reading:level_list' %}">Ver niveis</a>
+            </div>
+        </div>
+        <div class="hero-mascot">
+            <img src="{% static 'img/alexandrinho-web.png' %}?v=20260505-lecto3" alt="Alexandrinho, mascote do Lecto" width="520" height="284" decoding="async">
+        </div>
+    </div>
+
+    <aside class="quiz-panel" aria-labelledby="quick-quiz-title">
+        <p class="eyebrow">Nivelamento rapido</p>
+        <h2 id="quick-quiz-title">7 perguntas</h2>
+        <p>Escolha um nivel, responda o quiz e receba uma sugestao de leitura.</p>
+        <a class="button primary full" href="{% url 'quiz:placement_start' %}">Comecar agora</a>
+    </aside>
+</section>
+
+<section class="section">
+    <div class="section-heading">
+        <h2>Niveis</h2>
+        <a href="{% url 'reading:level_list' %}">Ver todos</a>
+    </div>
+    <div class="level-list">
+        {% for level in levels %}
+            <a class="level-pill" href="{% url 'reading:level_detail' level.slug %}">
+                <strong>{{ level.name }}</strong>
+                <span>{{ level.min_words }}-{{ level.max_words }} palavras</span>
+            </a>
+        {% empty %}
+            <p class="empty-state">Os niveis serao carregados na primeira seed de dados.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-heading">
+        <h2>Categorias</h2>
+        <a href="{% url 'reading:category_list' %}">Explorar</a>
+    </div>
+    <div class="category-grid">
+        {% for category in categories %}
+            <a class="category-tile" href="{% url 'reading:category_detail' category.slug %}">
+                {{ category.name }}
+            </a>
+        {% empty %}
+            <p class="empty-state">As categorias iniciais ainda nao foram cadastradas.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-heading">
+        <h2>Textos em destaque</h2>
+    </div>
+    <div class="text-grid">
+        {% for text in featured_texts %}
+            {% include "partials/text_card.html" with text=text %}
+        {% empty %}
+            <p class="empty-state">Assim que os primeiros textos forem publicados, eles aparecem aqui.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

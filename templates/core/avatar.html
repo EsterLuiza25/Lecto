@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Meu Avatar - Lecto{% endblock %}
+
+{% block content %}
+<section
+    class="avatar-page avatar-page--builder"
+    data-avatar-page
+    data-avatar-builder
+    data-server-points="{{ profile.coin_balance|default:0 }}"
+    data-server-read-count="{{ total_completed_reads|default:0 }}"
+    data-server-streak="{{ profile.reading_streak|default:0 }}"
+    data-server-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+>
+    <div class="avatar-hero avatar-hero--modern">
+        <div>
+            <p class="eyebrow">Editor de avatar</p>
+            <h1>Monte seu leitor Lecto.</h1>
+            <p>Escolha camadas, libere itens com moedinhas e salve a combinacao para acompanhar sua leitura.</p>
+        </div>
+        <div class="avatar-stats-strip" aria-label="Resumo do perfil">
+            <span><strong data-points-total>0</strong> moedinhas</span>
+            <span><strong data-avatar-read-count>0</strong> leituras</span>
+            <span><strong>{{ profile.reading_streak|default:0 }}</strong> ofensiva</span>
+            <span><strong data-avatar-favorite-count>0</strong> favoritos</span>
+        </div>
+    </div>
+
+    <div class="avatar-builder-shell">
+        <aside class="avatar-builder-card">
+            <div class="avatar-layer-stage" data-avatar-layer-preview>
+                <div class="avatar-layer-canvas" data-avatar-layer-canvas aria-label="Preview do avatar em camadas"></div>
+            </div>
+
+            <div class="avatar-builder-card__body">
+                <h2 data-avatar-name-display>Leitor Lecto</h2>
+                <p class="avatar-rank"><span data-avatar-rank>Leitor novo</span></p>
+                <div class="avatar-progress" aria-label="Progresso por pontos">
+                    <span data-avatar-progress></span>
+                </div>
+                <div class="avatar-preset-switch" aria-label="Presets de avatar">
+                    <button class="button secondary" type="button" data-avatar-preset="masculino">Masculino</button>
+                    <button class="button secondary" type="button" data-avatar-preset="feminino">Feminino</button>
+                </div>
+                <div class="avatar-builder-actions">
+                    <button class="button secondary" type="button" data-avatar-random>Aleatorio</button>
+                    <button class="button secondary" type="button" data-avatar-reset>Resetar</button>
+                    <button class="button primary" type="button" data-avatar-save disabled>Salvar avatar</button>
+                </div>
+                <p class="avatar-save-status" data-avatar-save-status>Escolha uma peca para alterar o avatar.</p>
+            </div>
+        </aside>
+
+        <div class="avatar-shop">
+            <div class="avatar-shop-head">
+                <div>
+                    <h2>Camadas do avatar</h2>
+                    <p>Escolha um visual classico e ajuste cores, cabelo, roupa e detalhes.</p>
+                </div>
+            </div>
+
+            {% for layer in avatar_layers %}
+                <section class="avatar-shop-layer" data-layer-section="{{ layer.type }}">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">{{ layer.type }}</p>
+                            <h2>{{ layer.label }}</h2>
+                        </div>
+                        {% if layer.type == "accessory" %}
+                            <span class="avatar-layer-hint">multipla selecao</span>
+                        {% else %}
+                            <span class="avatar-layer-hint">uma escolha</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="avatar-shop-grid">
+                        {% for option in layer.options %}
+                            <button
+                                class="avatar-shop-option"
+                                type="button"
+                                data-avatar-option
+                                data-option-id="{{ option.id }}"
+                                data-option-type="{{ option.option_type }}"
+                                data-option-name="{{ option.name }}"
+                                data-option-price="{{ option.coin_price }}"
+                                data-option-unlocked="{% if option.unlock_state.is_unlocked %}true{% else %}false{% endif %}"
+                                data-option-can-unlock="{% if option.unlock_state.can_unlock %}true{% else %}false{% endif %}"
+                                data-option-coins-missing="{{ option.unlock_state.coins_missing }}"
+                                data-option-reads-missing="{{ option.unlock_state.reads_missing }}"
+                                data-option-requirement="{{ option.requirement_label }}"
+                                data-option-purchase-url="{% url 'avatar_purchase' option.id %}"
+                                data-option-layer-order="{{ option.layer_order }}"
+                                data-option-asset="{% if option.image_asset %}{{ option.image_asset.url }}?v=avatar-classic-5{% endif %}"
+                                {% if not option.unlock_state.is_unlocked and not option.unlock_state.can_unlock %}disabled{% endif %}
+                            >
+                                <span class="avatar-shop-art" aria-hidden="true"></span>
+                                <span class="avatar-shop-copy">
+                                    <strong>{{ option.name }}</strong>
+                                    <small>{{ option.coin_price }} moedas</small>
+                                    {% if option.required_category %}
+                                        <small>{{ option.requirement_label }}</small>
+                                    {% endif %}
+                                    <span class="avatar-shop-state" data-option-state>
+                                        {% if option.unlock_state.is_unlocked %}
+                                            Selecionar
+                                        {% elif not option.unlock_state.meets_read_requirement %}
+                                            Indisponivel: faltam {{ option.unlock_state.reads_missing }} leitura(s)
+                                        {% elif not option.unlock_state.has_enough_coins %}
+                                            Indisponivel: faltam {{ option.unlock_state.coins_missing }} moedas
+                                        {% else %}
+                                            Liberar {{ option.coin_price }}
+                                        {% endif %}
+                                    </span>
+                                </span>
+                            </button>
+                        {% empty %}
+                            <p class="empty-state">Nenhum item ativo nesta camada.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="avatar-dashboard">
+        <section class="avatar-panel">
+            <div class="section-heading">
+                <h2>Especialidade por categoria</h2>
+            </div>
+            <div class="profile-list">
+                {% for stat in category_stats %}
+                    <span class="profile-list__item">
+                        <strong>{{ stat.name }}</strong>
+                        <span>{{ stat.total }} leitura(s) / {{ stat.expertise }}</span>
+                    </span>
+                {% empty %}
+                    <p class="empty-state">Conclua leituras para ver seu progresso por categoria.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="avatar-panel">
+            <div class="section-heading">
+                <h2>Ultimas leituras</h2>
+            </div>
+            <div class="profile-list" data-avatar-reads>
+                <p class="empty-state">As leituras marcadas aparecem aqui.</p>
+            </div>
+        </section>
+
+        <section class="avatar-panel">
+            <div class="section-heading">
+                <h2>Favoritos</h2>
+            </div>
+            <div class="profile-list" data-avatar-favorites>
+                <p class="empty-state">Textos favoritados aparecem aqui.</p>
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}

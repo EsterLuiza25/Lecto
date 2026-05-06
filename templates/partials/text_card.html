@@ -1,0 +1,24 @@
+<article class="text-card">
+    <div class="text-card__visual">
+        {% if text.cover_image %}
+            <img src="{{ text.cover_image.url }}" alt="" loading="lazy" decoding="async">
+        {% elif text.animation_asset %}
+            <img src="{{ text.animation_asset.url }}" alt="" loading="lazy" decoding="async">
+        {% else %}
+            <span>{{ text.level.name }}</span>
+        {% endif %}
+    </div>
+    <div class="text-card__body">
+        <div class="meta-row">
+            <span>{{ text.level.name }}</span>
+            <span>{{ text.category.name }}</span>
+        </div>
+        <h3>{{ text.title }}</h3>
+        <p>{{ text.summary_pt }}</p>
+        <div class="text-card__footer">
+            <span>{{ text.estimated_reading_time }} min</span>
+            <span>{{ text.word_count }} palavras</span>
+            <a href="{{ text.get_absolute_url }}">Ler</a>
+        </div>
+    </div>
+</article>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Cadastro - Lecto{% endblock %}
+
+{% block content %}
+<section class="auth-panel wide">
+    <h1>Criar conta</h1>
+    <p>Crie seu perfil para salvar seu nivel, escolher interesses e acompanhar suas leituras.</p>
+    <form method="post" class="stack-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="button primary" type="submit">Cadastrar</button>
+    </form>
+</section>
+{% endblock %}
