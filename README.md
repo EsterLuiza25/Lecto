@@ -148,12 +148,13 @@ DJANGO_SECURE_SSL_REDIRECT=1
 DJANGO_SECURE_HSTS_SECONDS=31536000
 DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS=1
 DJANGO_SECURE_HSTS_PRELOAD=0
+DJANGO_SERVE_MEDIA=1
 ```
 
 ### Build Command
 
 ```bash
-pip install -r requirements.txt && python manage.py collectstatic --noinput
+pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py prepare_render_media
 ```
 
 ### Start Command
@@ -163,6 +164,8 @@ gunicorn lecto.wsgi:application
 ```
 
 O repositório também inclui um `Procfile` com esse mesmo comando e um `runtime.txt` fixando Python 3.12.6.
+
+O comando `prepare_render_media` recria as ilustrações dos textos e camadas do avatar durante o deploy quando o banco já existe. Em um banco ainda não migrado, ele apenas pula essa etapa sem quebrar o build.
 
 ### Primeiro Deploy / Banco Limpo
 

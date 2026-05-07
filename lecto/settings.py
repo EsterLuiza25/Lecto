@@ -228,6 +228,7 @@ STORAGES = {
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+SERVE_MEDIA = env_bool("DJANGO_SERVE_MEDIA", DEBUG)
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'profile'

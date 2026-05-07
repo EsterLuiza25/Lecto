@@ -4,10 +4,20 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Lecto{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20260506-responsive1">
+    <title>{% block title %}Lecto - ingl&ecirc;s gamificado por n&iacute;vel e categoria{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Pratique ingl&ecirc;s com textos por n&iacute;vel e categoria, quizzes personalizados, vocabul&aacute;rio destacado, moedinhas e avatar para acompanhar sua evolu&ccedil;&atilde;o.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Lecto">
+    <meta property="og:title" content="{% block og_title %}Lecto - ingl&ecirc;s gamificado por n&iacute;vel e categoria{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Textos curtos, quizzes personalizados, vocabul&aacute;rio destacado e avatar gamificado para evoluir no ingl&ecirc;s todos os dias.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/alexandrinho-web.png' %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Lecto - ingl&ecirc;s gamificado por n&iacute;vel e categoria{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Leia, responda quizzes, ganhe moedinhas e personalize seu avatar enquanto pratica ingl&ecirc;s no seu ritmo.{% endblock %}">
+    <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20260507-mobileavatar3">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
         <a class="brand" href="{% url 'home' %}">
             <span class="brand-mark">
@@ -62,6 +72,6 @@
         <span>Lecto com Alexandrinho</span>
         <span>Textos em ingles para leitores brasileiros.</span>
     </footer>
-    <script src="{% static 'js/lecto.js' %}?v=20260506-launchclean2" defer></script>
+    <script src="{% static 'js/lecto.js' %}?v=20260507-mobileavatar3" defer></script>
 </body>
 </html>

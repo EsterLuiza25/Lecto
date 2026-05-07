@@ -1,7 +1,7 @@
 (function () {
     const STORAGE_KEY = "lectoProfile";
     const PROFILE_DATA_VERSION = "launch-clean-2";
-    const AVATAR_ART_VERSION = "avatar-classic-5";
+    const AVATAR_ART_VERSION = "avatar-classic-6";
     const DEFAULT_PROFILE = {
         name: "Leitor Lecto",
         points: 0,
@@ -40,6 +40,10 @@
 
     function cloneDefaultProfile() {
         return JSON.parse(JSON.stringify(DEFAULT_PROFILE));
+    }
+
+    function cloneProfile(profile) {
+        return JSON.parse(JSON.stringify(profile || cloneDefaultProfile()));
     }
 
     function loadProfile() {
@@ -527,6 +531,7 @@
     function setupLayeredAvatar(page, profile) {
         const builder = page.matches("[data-avatar-builder]") ? page : page.querySelector("[data-avatar-builder]");
         if (!builder) return;
+        builder.__avatarDraft = null;
 
         ensureAvatarLayerDefaults(builder, profile);
         if (profile.pendingAvatarPreset && applyAvatarPreset(builder, profile, profile.pendingAvatarPreset)) {
@@ -539,7 +544,7 @@
 
         builder.querySelectorAll("[data-avatar-option]").forEach((button) => {
             button.addEventListener("click", () => {
-                const current = loadProfile();
+                const current = getAvatarWorkingProfile(builder);
                 ensureAvatarLayerDefaults(builder, current);
                 const option = avatarOptionFromNode(button);
 
@@ -552,23 +557,24 @@
                         .then((updated) => {
                             showToast(`${option.name} liberado por ${option.price} moedas.`);
                             selectAvatarOption(updated, option);
-                            saveProfile(updated);
-                            markAvatarSaveState(builder, "dirty");
+                            setAvatarDraft(builder, updated);
                         })
                         .catch((error) => showToast(error.message));
                     return;
                 }
 
                 selectAvatarOption(current, option);
-                saveProfile(current);
-                markAvatarSaveState(builder, "dirty");
+                setAvatarDraft(builder, current);
             });
         });
 
         const saveButton = builder.querySelector("[data-avatar-save]");
         if (saveButton) {
             saveButton.addEventListener("click", () => {
-                saveProfile(loadProfile());
+                const profileToSave = builder.__avatarDraft ? cloneProfile(builder.__avatarDraft) : getAvatarWorkingProfile(builder);
+                ensureAvatarLayerDefaults(builder, profileToSave);
+                saveProfile(profileToSave);
+                builder.__avatarDraft = null;
                 markAvatarSaveState(builder, "saved");
                 showToast("Avatar salvo.");
             });
@@ -577,23 +583,21 @@
         const resetButton = builder.querySelector("[data-avatar-reset]");
         if (resetButton) {
             resetButton.addEventListener("click", () => {
-                const current = loadProfile();
+                const current = getAvatarWorkingProfile(builder);
                 current.avatarLayers = cloneDefaultProfile().avatarLayers;
                 current.avatarArtVersion = AVATAR_ART_VERSION;
                 ensureAvatarLayerDefaults(builder, current);
-                saveProfile(current);
-                markAvatarSaveState(builder, "dirty");
+                setAvatarDraft(builder, current);
                 showToast("Avatar resetado para os itens gratuitos.");
             });
         }
 
         builder.querySelectorAll("[data-avatar-preset]").forEach((button) => {
             button.addEventListener("click", () => {
-                const current = loadProfile();
+                const current = getAvatarWorkingProfile(builder);
                 ensureAvatarLayerDefaults(builder, current);
                 if (applyAvatarPreset(builder, current, button.dataset.avatarPreset)) {
-                    saveProfile(current);
-                    markAvatarSaveState(builder, "dirty");
+                    setAvatarDraft(builder, current);
                     showToast(`Preset ${button.textContent.trim()} aplicado.`);
                 }
             });
@@ -602,7 +606,7 @@
         const randomButton = builder.querySelector("[data-avatar-random]");
         if (randomButton) {
             randomButton.addEventListener("click", () => {
-                const current = loadProfile();
+                const current = getAvatarWorkingProfile(builder);
                 ensureAvatarLayerDefaults(builder, current);
                 const options = getAvatarOptions(builder).filter((option) => isAvatarOptionUnlocked(current, option));
                 ["base_body", "body_style", "hair_style", "outfit", "eyes"].forEach((type) => {
@@ -616,14 +620,23 @@
                     .filter(() => Math.random() > 0.55)
                     .slice(0, 2)
                     .map((option) => option.id);
-                saveProfile(current);
-                markAvatarSaveState(builder, "dirty");
+                setAvatarDraft(builder, current);
                 showToast("Combinacao aleatoria aplicada.");
             });
         }
 
         renderLayeredAvatar(profile);
         markAvatarSaveState(builder, "idle");
+    }
+
+    function getAvatarWorkingProfile(builder) {
+        return cloneProfile(builder.__avatarDraft || loadProfile());
+    }
+
+    function setAvatarDraft(builder, profile) {
+        builder.__avatarDraft = cloneProfile(profile);
+        renderAvatar(builder.__avatarDraft);
+        markAvatarSaveState(builder, "dirty");
     }
 
     function markAvatarSaveState(builder, state) {
