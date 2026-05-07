@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Categorias - Lecto{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-heading">
+        <h1>Categorias</h1>
+    </div>
+    <div class="category-grid">
+        {% for category in categories %}
+            <a class="category-tile" href="{% url 'reading:category_detail' category.slug %}">
+                {{ category.name }}
+            </a>
+        {% empty %}
+            <p class="empty-state">Nenhuma categoria cadastrada ainda.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

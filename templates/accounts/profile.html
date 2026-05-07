@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil - Lecto{% endblock %}
+
+{% block content %}
+<section class="profile-layout">
+    <aside class="profile-card">
+        <div class="avatar-preview">
+            {% if profile.avatar and profile.avatar.image_asset %}
+                <img src="{{ profile.avatar.image_asset.url }}" alt="">
+            {% else %}
+                <span>{{ profile.display_name|default:user.username|first|upper }}</span>
+            {% endif %}
+        </div>
+        <h1>{{ profile.display_name|default:user.username }}</h1>
+        <p>{{ profile.coin_balance }} moedinhas</p>
+        <p>{{ total_completed_reads }} leituras concluidas</p>
+        <p>Ofensiva: {{ profile.reading_streak }} dia(s)</p>
+        <p>Melhor ofensiva: {{ profile.longest_reading_streak }} dia(s)</p>
+        {% if profile.current_level %}
+            <p>Nivel atual: {{ profile.current_level.name }}</p>
+        {% else %}
+            <p>Nivel atual: ainda nao definido</p>
+        {% endif %}
+    </aside>
+
+    <div class="profile-main">
+        <section class="section compact">
+            <h2>Editar perfil</h2>
+            <form method="post" class="stack-form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="button primary" type="submit">Salvar perfil</button>
+            </form>
+        </section>
+
+        <section class="section compact">
+            <h2>Especialidade por categoria</h2>
+            <div class="simple-list">
+                {% for stat in category_stats %}
+                    <span>{{ stat.name }} - {{ stat.total }} leitura(s) - {{ stat.expertise }}</span>
+                {% empty %}
+                    <p class="empty-state">Conclua leituras para ver sua especialidade por assunto.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="section compact">
+            <h2>Conquistas</h2>
+            <div class="simple-list">
+                {% for item in achievements %}
+                    <span>{{ item.achievement.name }} - {{ item.earned_at|date:"d/m/Y" }}</span>
+                {% empty %}
+                    <p class="empty-state">Suas medalhas aparecem aqui ao completar 10, 50 e 100 leituras.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="section compact">
+            <h2>Favoritos</h2>
+            <div class="simple-list">
+                {% for favorite in favorites %}
+                    <a href="{{ favorite.text.get_absolute_url }}">{{ favorite.text.title }}</a>
+                {% empty %}
+                    <p class="empty-state">Voce ainda nao favoritou nenhum texto.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="section compact">
+            <h2>Historico</h2>
+            <div class="simple-list">
+                {% for item in reading_history %}
+                    <a href="{{ item.text.get_absolute_url }}">{{ item.text.title }} - {{ item.get_status_display }}</a>
+                {% empty %}
+                    <p class="empty-state">Seu historico de leitura comeca no primeiro texto aberto.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</section>
+{% endblock %}

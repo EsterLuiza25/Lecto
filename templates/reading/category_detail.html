@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Lecto{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Categoria</p>
+            <h1>{{ category.name }}</h1>
+            <p>{{ category.description_pt }}</p>
+        </div>
+    </div>
+
+    <form method="get" class="filter-bar">
+        <select name="nivel">
+            <option value="">Todos os niveis</option>
+            {% for level in levels %}
+                <option value="{{ level.slug }}" {% if selected_level == level.slug %}selected{% endif %}>
+                    {{ level.name }}
+                </option>
+            {% endfor %}
+        </select>
+        {% if category.slug == "hqs" and characters %}
+            <select name="personagem">
+                <option value="">Todos os personagens</option>
+                {% for character in characters %}
+                    <option value="{{ character.slug }}" {% if selected_character == character.slug %}selected{% endif %}>
+                        {{ character.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        {% endif %}
+        <button class="button secondary" type="submit">Filtrar</button>
+    </form>
+
+    <div class="text-grid">
+        {% for text in texts %}
+            {% include "partials/text_card.html" with text=text %}
+        {% empty %}
+            <p class="empty-state">Nenhum texto publicado nesta categoria ainda.</p>
+        {% endfor %}
+    </div>
+    {% include "partials/pagination.html" %}
+</section>
+{% endblock %}

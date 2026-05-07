@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ text.title }} - Lecto{% endblock %}
+
+{% block content %}
+<article class="reader-layout">
+    <header class="reader-header">
+        <p class="eyebrow">{{ text.level.name }} / {{ text.category.name }}</p>
+        <h1>{{ text.title }}</h1>
+        <p>{{ text.estimated_reading_time }} min de leitura / {{ text.word_count }} palavras</p>
+        {% if user.is_authenticated %}
+            <div class="reader-actions">
+                <form method="post" action="{% url 'reading:toggle_favorite' text.slug %}">
+                    {% csrf_token %}
+                    <button class="button secondary" type="submit">
+                        {% if is_favorited %}Remover favorito{% else %}Favoritar{% endif %}
+                    </button>
+                </form>
+                <form method="post" action="{% url 'reading:mark_completed' text.slug %}">
+                    {% csrf_token %}
+                    <button class="button primary" type="submit">Concluir leitura</button>
+                </form>
+            </div>
+        {% else %}
+            <p class="open-access-note">Leitura liberada temporariamente sem login.</p>
+            <div class="reader-actions">
+                <button
+                    class="button primary"
+                    type="button"
+                    data-read-complete
+                    data-text-slug="{{ text.slug }}"
+                    data-text-title="{{ text.title }}"
+                    data-text-url="{{ text.get_absolute_url }}"
+                >
+                    Marcar como lido (+5 pontos)
+                </button>
+                <button
+                    class="button secondary"
+                    type="button"
+                    data-favorite-toggle
+                    data-text-slug="{{ text.slug }}"
+                    data-text-title="{{ text.title }}"
+                    data-text-url="{{ text.get_absolute_url }}"
+                >
+                    Favoritar
+                </button>
+            </div>
+        {% endif %}
+    </header>
+
+    {% if text.cover_image %}
+        <section class="story-artwork">
+            <img src="{{ text.cover_image.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
+        </section>
+    {% elif text.animation_asset %}
+        <section class="story-artwork">
+            <img src="{{ text.animation_asset.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
+        </section>
+    {% else %}
+        <section class="story-artwork story-artwork--empty">
+            <div>
+                <strong>{{ text.category.name }}</strong>
+                <span>{{ text.image_prompt|default:text.summary_pt }}</span>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="reader-content">
+        {{ text.content_en|linebreaks }}
+    </section>
+
+    <section class="section compact">
+        <h2>Palavras em destaque</h2>
+        <div class="vocab-list">
+            {% for item in text.vocabulary.all %}
+                <article class="vocab-item">
+                    <h3>{{ item.word_en }}</h3>
+                    <p>{{ item.translation_pt }}</p>
+                    <p>Pronuncia: {{ item.pronunciation_pt }}</p>
+                    {% if item.audio_url %}
+                        <a href="{{ item.audio_url }}">Ouvir pronuncia</a>
+                    {% endif %}
+                    {% if item.example_en %}
+                        <small>{{ item.example_en }}</small>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <p class="empty-state">O vocabulario deste texto ainda sera cadastrado.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="section compact">
+        <h2>Quiz do texto</h2>
+        <p>Responda 5 perguntas para conferir sua compreensao e ganhar moedinhas.</p>
+        <a class="button primary" href="{% url 'quiz:text_quiz' text.slug %}">Responder quiz</a>
+    </section>
+</article>
+{% endblock %}
