@@ -11,6 +11,7 @@ urlpatterns = [
     path("nivel/<slug:slug>/", views.level_detail, name="level_detail"),
     path("categorias/", views.category_list, name="category_list"),
     path("categoria/<slug:slug>/", views.category_detail, name="category_detail"),
+    path("texto/<slug:slug>/arte.svg", views.text_artwork, name="text_artwork"),
     path("texto/<slug:slug>/", views.text_detail, name="text_detail"),
     path("texto/<slug:slug>/favorito/", views.toggle_favorite, name="toggle_favorite"),
     path("texto/<slug:slug>/concluir/", views.mark_completed, name="mark_completed"),

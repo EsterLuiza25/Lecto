@@ -74,13 +74,41 @@ def write_text_illustration(text):
     )
 
 
+def build_text_illustration_svg(text):
+    prompt = text.image_prompt or build_image_prompt(text)
+    return build_story_illustration_svg(
+        slug=text.slug,
+        title=text.title,
+        level_name=text.level.name,
+        category_slug=text.category.slug,
+        category_name=text.category.name,
+        summary=text.summary_pt,
+        content=text.content_en,
+        prompt=prompt,
+    )
+
+
 def write_story_illustration(slug, title, level_name, category_slug, category_name, summary="", content="", prompt=""):
     asset_dir = Path(settings.MEDIA_ROOT) / "texts" / "illustrations"
     asset_dir.mkdir(parents=True, exist_ok=True)
 
     relative_path = f"texts/illustrations/{slug}.svg"
     full_path = Path(settings.MEDIA_ROOT) / relative_path
+    svg = build_story_illustration_svg(
+        slug=slug,
+        title=title,
+        level_name=level_name,
+        category_slug=category_slug,
+        category_name=category_name,
+        summary=summary,
+        content=content,
+        prompt=prompt,
+    )
+    full_path.write_text(svg, encoding="utf-8")
+    return relative_path
 
+
+def build_story_illustration_svg(slug, title, level_name, category_slug, category_name, summary="", content="", prompt=""):
     seed = _seed(slug)
     motif = _infer_motif(category_slug, title, summary, content)
     object_motif = _infer_keyword_motif(f"{title} {summary} {content}")
@@ -106,8 +134,7 @@ def write_story_illustration(slug, title, level_name, category_slug, category_na
 </g>
 </g>
 </svg>"""
-    full_path.write_text(svg, encoding="utf-8")
-    return relative_path
+    return svg
 
 
 def _seed(slug):

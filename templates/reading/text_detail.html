@@ -48,22 +48,9 @@
         {% endif %}
     </header>
 
-    {% if text.animation_asset %}
-        <section class="story-artwork">
-            <img src="{{ text.animation_asset.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
-        </section>
-    {% elif text.cover_image %}
-        <section class="story-artwork">
-            <img src="{{ text.cover_image.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
-        </section>
-    {% else %}
-        <section class="story-artwork story-artwork--empty">
-            <div>
-                <strong>{{ text.category.name }}</strong>
-                <span>{{ text.image_prompt|default:text.summary_pt }}</span>
-            </div>
-        </section>
-    {% endif %}
+    <section class="story-artwork">
+        <img src="{% url 'reading:text_artwork' text.slug %}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
+    </section>
 
     <section class="reader-content">
         {{ text.content_en|linebreaks }}
@@ -76,7 +63,7 @@
                 <article class="vocab-item">
                     <h3>{{ item.word_en }}</h3>
                     <p>{{ item.translation_pt }}</p>
-                    <p>Pronuncia: {{ item.pronunciation_pt }}</p>
+                    <p>Pron&uacute;ncia para falar: {{ item.pronunciation_pt }}</p>
                     {% if item.audio_url %}
                         <a href="{{ item.audio_url }}">Ouvir pronuncia</a>
                     {% endif %}
