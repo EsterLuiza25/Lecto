@@ -12,13 +12,13 @@
         </div>
     </div>
 
-    {% if text.cover_image %}
-        <section class="quiz-artwork">
-            <img src="{{ text.cover_image.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
-        </section>
-    {% elif text.animation_asset %}
+    {% if text.animation_asset %}
         <section class="quiz-artwork">
             <img src="{{ text.animation_asset.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
+        </section>
+    {% elif text.cover_image %}
+        <section class="quiz-artwork">
+            <img src="{{ text.cover_image.url }}" alt="Desenho de {{ text.title }}" width="900" height="420" decoding="async">
         </section>
     {% endif %}
 

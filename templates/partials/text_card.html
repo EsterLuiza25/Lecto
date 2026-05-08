@@ -1,9 +1,9 @@
 <article class="text-card">
     <div class="text-card__visual">
-        {% if text.cover_image %}
-            <img src="{{ text.cover_image.url }}" alt="" loading="lazy" decoding="async">
-        {% elif text.animation_asset %}
+        {% if text.animation_asset %}
             <img src="{{ text.animation_asset.url }}" alt="" loading="lazy" decoding="async">
+        {% elif text.cover_image %}
+            <img src="{{ text.cover_image.url }}" alt="" loading="lazy" decoding="async">
         {% else %}
             <span>{{ text.level.name }}</span>
         {% endif %}
