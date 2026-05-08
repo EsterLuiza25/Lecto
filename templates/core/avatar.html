@@ -30,6 +30,9 @@
 
     <div class="avatar-builder-shell">
         <aside class="avatar-builder-card">
+            <button class="avatar-mobile-back" type="button" data-avatar-back aria-label="Voltar">
+                <span aria-hidden="true">&larr;</span>
+            </button>
             <div class="avatar-layer-stage" data-avatar-layer-preview>
                 <div class="avatar-layer-canvas" data-avatar-layer-canvas aria-label="Preview do avatar em camadas"></div>
             </div>
@@ -65,7 +68,6 @@
                 <section class="avatar-shop-layer" data-layer-section="{{ layer.type }}">
                     <div class="section-heading">
                         <div>
-                            <p class="eyebrow">{{ layer.type }}</p>
                             <h2>{{ layer.label }}</h2>
                         </div>
                         {% if layer.type == "accessory" %}

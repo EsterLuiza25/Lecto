@@ -7,7 +7,7 @@
     <div class="quiz-intro">
         <p class="eyebrow">Quiz inicial</p>
         <h1>Descubra por onde comecar.</h1>
-        <p>Escolha um nivel, responda 7 perguntas e veja se ele combina com sua leitura atual.</p>
+        <p>Escolha um nivel e uma categoria para testar uma area especifica, ou faca o teste geral para receber uma indicacao de nivel.</p>
     </div>
 
     <form method="get" class="quiz-picker">
@@ -36,60 +36,126 @@
         <button class="button primary" type="submit">Carregar perguntas</button>
     </form>
 
-    {% if selected_level %}
+    <form method="get" class="quiz-discovery">
+        <div>
+            <p class="eyebrow">Nao sei meu nivel</p>
+            <h2>Teste geral com perguntas f&aacute;ceis e dif&iacute;ceis</h2>
+            <p>Responda uma sequ&ecirc;ncia de perguntas de Iniciante a C2. No final, o Lecto indica por qual n&iacute;vel voc&ecirc; deve come&ccedil;ar.</p>
+        </div>
+        <button class="button secondary" type="submit" name="modo" value="{{ diagnostic_mode }}">Descobrir meu nivel</button>
+    </form>
+
+    {% if selected_level or is_diagnostic %}
         <section class="section compact">
             <div class="section-heading">
                 <div>
-                    <p class="eyebrow">{{ selected_level.name }}</p>
-                    <h2>Teste de 7 perguntas</h2>
+                    {% if is_diagnostic %}
+                        <p class="eyebrow">Teste geral</p>
+                        <h2>Descobrir meu nivel</h2>
+                    {% else %}
+                        <p class="eyebrow">{{ selected_level.name }}</p>
+                        <h2>Teste de 7 perguntas</h2>
+                    {% endif %}
                 </div>
             </div>
 
             {% if result %}
-                <div class="result-panel {% if result.passed %}is-good{% else %}is-warning{% endif %}">
-                    <strong>{{ result.score }}/{{ result.total }} acertos</strong>
+                <div class="result-panel {% if result.is_diagnostic or result.passed %}is-good{% else %}is-warning{% endif %}">
+                    {% if result.is_diagnostic %}
+                        <strong>Nivel indicado: {{ result.recommended_level.name }}</strong>
+                    {% else %}
+                        <strong>{{ result.score }}/{{ result.total }} acertos</strong>
+                    {% endif %}
                     <span>{{ result.errors }} erros / {{ result.percentage|floatformat:0 }}%</span>
-                    {% if result.passed %}
+                    {% if result.is_diagnostic %}
+                        <p>Com esse resultado, recomendamos que voce comece por {{ result.recommended_level.name }} e avance quando os textos ficarem confortaveis.</p>
+                        {% if result.level_breakdown %}
+                            <div class="diagnostic-breakdown" aria-label="Desempenho por nivel">
+                                {% for row in result.level_breakdown %}
+                                    <span>{{ row.level.name }}: {{ row.score }}/{{ row.total }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% elif result.passed %}
                         <p>Voce demonstrou boa leitura para {{ selected_level.name }}.</p>
                     {% else %}
                         <p>Esse nivel ainda pode estar pesado. Recomendacao: comece por {{ result.recommended_level.name }}.</p>
                     {% endif %}
-                    <a class="button secondary" href="{% url 'reading:level_detail' result.recommended_level.slug %}">
-                        Ver textos recomendados
-                    </a>
+                    <div class="result-actions">
+                        <a class="button secondary" href="{% url 'reading:level_detail' result.recommended_level.slug %}">
+                            Ver textos recomendados
+                        </a>
+                        {% if result.is_diagnostic %}
+                            <a class="button secondary" href="{% url 'quiz:placement_start' %}?modo={{ diagnostic_mode }}">Refazer teste</a>
+                        {% else %}
+                            <a class="button secondary" href="{% url 'quiz:placement_start' %}">Fazer outro teste</a>
+                        {% endif %}
+                    </div>
                 </div>
+
+                {% if result.question_results %}
+                    <div class="answer-review">
+                        <h2>Corre&ccedil;&atilde;o das respostas</h2>
+                        {% for row in result.question_results %}
+                            <article class="answer-review-item {% if row.is_correct %}is-correct{% else %}is-wrong{% endif %}">
+                                <div class="answer-review-item__head">
+                                    <strong>{{ forloop.counter }}. {{ row.question.question_text }}</strong>
+                                    {% if row.is_correct %}
+                                        <span>Acertou</span>
+                                    {% else %}
+                                        <span>Errou</span>
+                                    {% endif %}
+                                </div>
+                                {% if row.selected_answer %}
+                                    <p>Sua resposta: {{ row.selected_answer.answer_text }}</p>
+                                {% else %}
+                                    <p>Sua resposta: nenhuma alternativa marcada.</p>
+                                {% endif %}
+                                {% if not row.is_correct and row.correct_answer %}
+                                    <p>Resposta correta: {{ row.correct_answer.answer_text }}</p>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <form method="post" class="stack-form">
+                    {% csrf_token %}
+                    {% if is_diagnostic %}
+                        <input type="hidden" name="modo" value="{{ diagnostic_mode }}">
+                    {% else %}
+                        <input type="hidden" name="nivel" value="{{ selected_level.slug }}">
+                        {% if selected_category %}
+                            <input type="hidden" name="categoria" value="{{ selected_category.slug }}">
+                        {% endif %}
+                    {% endif %}
+
+                    {% for question in questions %}
+                        <fieldset class="question-block">
+                            <legend>{{ forloop.counter }}. {{ question.question_text }}</legend>
+                            <div class="question-options">
+                                {% for answer in question.answers.all %}
+                                    <label>
+                                        <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}" required>
+                                        <span class="option-letter"></span>
+                                        <span>{{ answer.answer_text }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+                    {% endfor %}
+
+                    {% if questions %}
+                        <button class="button primary" type="submit">Ver resultado</button>
+                    {% elif is_diagnostic %}
+                        <p class="empty-state">Ainda nao existem perguntas gerais suficientes para montar o teste de nivel.</p>
+                    {% elif selected_category %}
+                        <p class="empty-state">Ainda nao existem perguntas para esse nivel e categoria.</p>
+                    {% else %}
+                        <p class="empty-state">Ainda nao existem perguntas gerais para esse nivel.</p>
+                    {% endif %}
+                </form>
             {% endif %}
-
-            <form method="post" class="stack-form">
-                {% csrf_token %}
-                <input type="hidden" name="nivel" value="{{ selected_level.slug }}">
-                {% if selected_category %}
-                    <input type="hidden" name="categoria" value="{{ selected_category.slug }}">
-                {% endif %}
-
-                {% for question in questions %}
-                    <fieldset class="question-block">
-                        <legend>{{ forloop.counter }}. {{ question.question_text }}</legend>
-                        <div class="question-options">
-                            {% for answer in question.answers.all %}
-                                <label>
-                                    <input type="radio" name="question_{{ question.id }}" value="{{ answer.id }}" required>
-                                    <span class="option-letter"></span>
-                                    <span>{{ answer.answer_text }}</span>
-                                </label>
-                            {% endfor %}
-                        </div>
-                    </fieldset>
-                {% endfor %}
-
-                {% if questions %}
-                    <button class="button primary" type="submit">Ver resultado</button>
-                {% elif selected_category %}
-                    <p class="empty-state">Ainda nao existem perguntas para esse nivel e categoria.</p>
-                {% else %}
-                    <p class="empty-state">Ainda nao existem perguntas gerais para esse nivel.</p>
-                {% endif %}
-            </form>
         </section>
     {% endif %}
 </section>

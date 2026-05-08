@@ -34,6 +34,32 @@
                 <p>Esse texto merece uma releitura calma antes de avancar.</p>
             {% endif %}
         </div>
+
+        {% if result.question_results %}
+            <div class="answer-review">
+                <h2>Corre&ccedil;&atilde;o das respostas</h2>
+                {% for row in result.question_results %}
+                    <article class="answer-review-item {% if row.is_correct %}is-correct{% else %}is-wrong{% endif %}">
+                        <div class="answer-review-item__head">
+                            <strong>{{ forloop.counter }}. {{ row.question.question_text }}</strong>
+                            {% if row.is_correct %}
+                                <span>Acertou</span>
+                            {% else %}
+                                <span>Errou</span>
+                            {% endif %}
+                        </div>
+                        {% if row.selected_answer %}
+                            <p>Sua resposta: {{ row.selected_answer.answer_text }}</p>
+                        {% else %}
+                            <p>Sua resposta: nenhuma alternativa marcada.</p>
+                        {% endif %}
+                        {% if not row.is_correct and row.correct_answer %}
+                            <p>Resposta correta: {{ row.correct_answer.answer_text }}</p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% endif %}
     {% endif %}
 
     <form method="post" class="stack-form">

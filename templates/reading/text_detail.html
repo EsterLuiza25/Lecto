@@ -16,23 +16,31 @@
                         {% if is_favorited %}Remover favorito{% else %}Favoritar{% endif %}
                     </button>
                 </form>
-                <form method="post" action="{% url 'reading:mark_completed' text.slug %}">
-                    {% csrf_token %}
-                    <button class="button primary" type="submit">Concluir leitura</button>
-                </form>
+                {% if is_completed %}
+                    <button class="button primary" type="button" disabled>Texto marcado como lido</button>
+                {% elif has_completed_text_quiz %}
+                    <form method="post" action="{% url 'reading:mark_completed' text.slug %}">
+                        {% csrf_token %}
+                        <button class="button primary" type="submit">Concluir leitura (+5 moedinhas)</button>
+                    </form>
+                {% else %}
+                    <a class="button primary" href="{% url 'quiz:text_quiz' text.slug %}">Responder quiz para liberar recompensa</a>
+                {% endif %}
             </div>
         {% else %}
-            <p class="open-access-note">Leitura liberada temporariamente sem login.</p>
             <div class="reader-actions">
                 <button
                     class="button primary"
                     type="button"
                     data-read-complete
+                    data-requires-quiz="true"
                     data-text-slug="{{ text.slug }}"
                     data-text-title="{{ text.title }}"
                     data-text-url="{{ text.get_absolute_url }}"
+                    data-ready-label="Marcar como lido (+5 pontos)"
+                    disabled
                 >
-                    Marcar como lido (+5 pontos)
+                    Responda o quiz para liberar recompensa
                 </button>
                 <button
                     class="button secondary"
@@ -62,7 +70,7 @@
             {% for item in text.vocabulary.all %}
                 <article class="vocab-item">
                     <h3>{{ item.word_en }}</h3>
-                    <p>{{ item.translation_pt }}</p>
+                    <p><strong>Tradu&ccedil;&atilde;o:</strong> {{ item.translation_pt }}</p>
                     <p>Pron&uacute;ncia para falar: {{ item.pronunciation_pt }}</p>
                     {% if item.audio_url %}
                         <a href="{{ item.audio_url }}">Ouvir pronuncia</a>

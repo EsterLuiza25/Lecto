@@ -226,13 +226,30 @@
         if (profile.readTexts && profile.readTexts[slug]) {
             button.textContent = "Texto ja marcado como lido";
             button.disabled = true;
+            return;
         }
+
+        const requiresQuiz = button.dataset.requiresQuiz === "true";
+        const hasQuizReward = Boolean(profile.quizRewards && profile.quizRewards[slug]);
+        if (requiresQuiz && !hasQuizReward) {
+            button.textContent = "Responda o quiz para liberar recompensa";
+            button.disabled = true;
+            return;
+        }
+
+        button.textContent = button.dataset.readyLabel || "Marcar como lido (+5 pontos)";
+        button.disabled = false;
 
         button.addEventListener("click", () => {
             const current = loadProfile();
             current.readTexts = current.readTexts || {};
+            current.quizRewards = current.quizRewards || {};
             if (current.readTexts[slug]) {
                 showToast("Este texto ja rendeu pontos de leitura.");
+                return;
+            }
+            if (requiresQuiz && !current.quizRewards[slug]) {
+                showToast("Responda o quiz deste texto antes de marcar como lido.");
                 return;
             }
             current.readTexts[slug] = {
@@ -1192,6 +1209,19 @@
         });
     }
 
+    function setupAvatarBackButton() {
+        const button = document.querySelector("[data-avatar-back]");
+        if (!button) return;
+
+        button.addEventListener("click", () => {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = "/";
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
         renderProfile(loadProfile());
         setupReadingPoints();
@@ -1200,5 +1230,6 @@
         setupAvatarPage();
         setupBot();
         setupMobileMenu();
+        setupAvatarBackButton();
     });
 })();

@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -6,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from progress.models import FavoriteText, ReadingProgress
 from progress.services import process_completed_reading
+from quiz.models import TextQuizAttempt
 
 from .artwork import build_text_illustration_svg
 from .models import Category, Character, Level, Text
@@ -103,10 +105,14 @@ def text_detail(request, slug):
     text = get_object_or_404(_published_texts().prefetch_related("vocabulary"), slug=slug)
     progress = None
     is_favorited = False
+    has_completed_text_quiz = False
+    is_completed = False
 
     if request.user.is_authenticated:
         progress, _ = ReadingProgress.objects.get_or_create(user=request.user, text=text)
         is_favorited = FavoriteText.objects.filter(user=request.user, text=text).exists()
+        has_completed_text_quiz = TextQuizAttempt.objects.filter(user=request.user, text=text).exists()
+        is_completed = progress.status == "completed"
 
     return render(
         request,
@@ -115,6 +121,8 @@ def text_detail(request, slug):
             "text": text,
             "progress": progress,
             "is_favorited": is_favorited,
+            "has_completed_text_quiz": has_completed_text_quiz,
+            "is_completed": is_completed,
         },
     )
 
@@ -141,6 +149,10 @@ def toggle_favorite(request, slug):
 @login_required
 def mark_completed(request, slug):
     text = get_object_or_404(_published_texts(), slug=slug)
+    if not TextQuizAttempt.objects.filter(user=request.user, text=text).exists():
+        messages.info(request, "Responda o quiz deste texto antes de concluir a leitura e receber moedinhas.")
+        return redirect("quiz:text_quiz", slug=text.slug)
+
     process_completed_reading(request.user, text)
 
     return redirect(text.get_absolute_url())

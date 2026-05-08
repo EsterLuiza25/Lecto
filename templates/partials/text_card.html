@@ -1,4 +1,4 @@
-<article class="text-card">
+<a class="text-card" href="{{ text.get_absolute_url }}" aria-label="Abrir texto {{ text.title }}">
     <div class="text-card__visual">
         <img src="{% url 'reading:text_artwork' text.slug %}" alt="" loading="lazy" decoding="async" onerror="this.closest('.text-card__visual').classList.add('is-image-missing'); this.remove();">
         <span class="text-card__fallback">{{ text.level.name }}</span>
@@ -13,7 +13,6 @@
         <div class="text-card__footer">
             <span>{{ text.estimated_reading_time }} min</span>
             <span>{{ text.word_count }} palavras</span>
-            <a href="{{ text.get_absolute_url }}">Ler</a>
         </div>
     </div>
-</article>
+</a>
