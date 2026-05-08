@@ -1157,6 +1157,41 @@
         });
     }
 
+    function setupMobileMenu() {
+        const toggle = document.querySelector("[data-menu-toggle]");
+        const nav = document.querySelector("[data-main-nav]");
+        const closeTargets = document.querySelectorAll("[data-menu-close]");
+        if (!toggle || !nav) return;
+
+        const backdrop = document.querySelector(".menu-backdrop");
+
+        function setOpen(isOpen) {
+            nav.classList.toggle("is-open", isOpen);
+            toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            document.body.classList.toggle("menu-is-open", isOpen);
+            if (backdrop) {
+                backdrop.hidden = !isOpen;
+                backdrop.classList.toggle("is-open", isOpen);
+            }
+        }
+
+        toggle.addEventListener("click", () => {
+            setOpen(!nav.classList.contains("is-open"));
+        });
+
+        closeTargets.forEach((target) => {
+            target.addEventListener("click", () => setOpen(false));
+        });
+
+        nav.querySelectorAll("a").forEach((link) => {
+            link.addEventListener("click", () => setOpen(false));
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") setOpen(false);
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
         renderProfile(loadProfile());
         setupReadingPoints();
@@ -1164,5 +1199,6 @@
         setupQuizReward();
         setupAvatarPage();
         setupBot();
+        setupMobileMenu();
     });
 })();

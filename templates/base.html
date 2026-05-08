@@ -15,7 +15,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{% block twitter_title %}Lecto - ingl&ecirc;s gamificado por n&iacute;vel e categoria{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}Leia, responda quizzes, ganhe moedinhas e personalize seu avatar enquanto pratica ingl&ecirc;s no seu ritmo.{% endblock %}">
-    <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20260507-mobileavatar3">
+    <link rel="stylesheet" href="{% static 'css/site.css' %}?v=20260507-mobilemenu2">
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
@@ -28,7 +28,17 @@
                 <small>Reading. Learning. Growth.</small>
             </span>
         </a>
-        <nav class="main-nav" aria-label="Navegacao principal">
+        <button class="menu-toggle" type="button" data-menu-toggle aria-controls="main-nav" aria-expanded="false" aria-label="Abrir menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="menu-backdrop" data-menu-close hidden></div>
+        <nav class="main-nav" id="main-nav" aria-label="Navegacao principal" data-main-nav>
+            <div class="main-nav__head">
+                <strong>Menu</strong>
+                <button type="button" data-menu-close aria-label="Fechar menu">x</button>
+            </div>
             <a href="{% url 'reading:level_list' %}">Niveis</a>
             <a href="{% url 'reading:category_list' %}">Categorias</a>
             <a href="{% url 'quiz:placement_start' %}">Quiz</a>
@@ -72,6 +82,6 @@
         <span>Lecto com Alexandrinho</span>
         <span>Textos em ingles para leitores brasileiros.</span>
     </footer>
-    <script src="{% static 'js/lecto.js' %}?v=20260507-mobileavatar3" defer></script>
+    <script src="{% static 'js/lecto.js' %}?v=20260507-mobilemenu2" defer></script>
 </body>
 </html>

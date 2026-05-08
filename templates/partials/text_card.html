@@ -1,9 +1,11 @@
 <article class="text-card">
     <div class="text-card__visual">
         {% if text.animation_asset %}
-            <img src="{{ text.animation_asset.url }}" alt="" loading="lazy" decoding="async">
+            <img src="{{ text.animation_asset.url }}" alt="" loading="lazy" decoding="async" onerror="this.closest('.text-card__visual').classList.add('is-image-missing'); this.remove();">
+            <span class="text-card__fallback">{{ text.level.name }}</span>
         {% elif text.cover_image %}
-            <img src="{{ text.cover_image.url }}" alt="" loading="lazy" decoding="async">
+            <img src="{{ text.cover_image.url }}" alt="" loading="lazy" decoding="async" onerror="this.closest('.text-card__visual').classList.add('is-image-missing'); this.remove();">
+            <span class="text-card__fallback">{{ text.level.name }}</span>
         {% else %}
             <span>{{ text.level.name }}</span>
         {% endif %}

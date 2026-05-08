@@ -2,6 +2,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.utils import OperationalError, ProgrammingError
+from reading.models import Text
 
 
 class Command(BaseCommand):
@@ -26,5 +27,8 @@ class Command(BaseCommand):
             return
 
         call_command("refresh_text_illustrations")
+        cleared_covers = Text.objects.filter(status="published").exclude(animation_asset="").exclude(cover_image="").update(cover_image="")
+        if cleared_covers:
+            self.stdout.write(f"Cleared stale cover_image references: {cleared_covers}.")
         call_command("generate_mass_content", "--only-avatars")
         self.stdout.write(self.style.SUCCESS("Render media assets ready."))
