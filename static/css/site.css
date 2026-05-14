@@ -1147,6 +1147,30 @@ textarea:focus {
     color: #9d352a;
 }
 
+.ai-explain-panel {
+    display: grid;
+    gap: 12px;
+}
+
+.ai-explain-panel h2,
+.ai-explain-panel p {
+    margin: 0;
+}
+
+.ai-explain-result {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid rgba(47, 143, 139, 0.22);
+    border-radius: 8px;
+    background: #f4fbf7;
+}
+
+.ai-explain-result p,
+.ai-explain-result small {
+    margin: 0;
+}
+
 @media (max-width: 820px) {
     .site-header,
     .home-grid,

@@ -1,6 +1,6 @@
 # Backlog - Lecto
 
-Atualizado em: 2026-05-05
+Atualizado em: 2026-05-14
 
 ## 1. Decisoes Confirmadas
 
@@ -19,6 +19,9 @@ Atualizado em: 2026-05-05
 - Alexandrinho deve aparecer como guia visual e conceitual.
 - O MVP deve priorizar experiencia completa, conteudo revisavel e manutencao simples.
 - Imagens geradas por IA devem ser opcionais e podem ser importadas manualmente.
+- O projeto continua SSR, mas agora possui API REST v1 paralela.
+- Recursos de IA devem funcionar com fallback local quando nao houver chave externa.
+- Automacoes de IA devem ser executadas por comando, nao durante requests comuns.
 
 ## 2. Status Geral
 
@@ -40,6 +43,13 @@ Atualizado em: 2026-05-05
 - Comando para importar capa manualmente.
 - Comando para podar catalogo.
 - Avatar modular com camadas e preco em moedas.
+- API REST v1 com endpoints JSON para textos, vocabulario e quizzes.
+- Documentacao OpenAPI/Swagger em `/api/v1/schema/` e `/api/v1/docs/`.
+- Endpoint `/api/v1/ai/explain/` para explicar trechos selecionados.
+- Servico `services/ai_engine.py` com geracao de quiz, analise de dificuldade e explicacao.
+- Fallback local de explicacao sem chave de API externa.
+- Comando `automate_content` para gerar quizzes automaticamente.
+- Testes automatizados para API, IA/fallback e automacao.
 
 ### Pendente ou Em Andamento
 
@@ -49,8 +59,9 @@ Atualizado em: 2026-05-05
 - Persistencia completa de favoritos/leitura para visitantes convertidos em usuarios.
 - Audio/pronuncia sintetizada.
 - Deploy e configuracao de producao.
-- Testes automatizados.
+- Ampliar cobertura de testes automatizados.
 - SEO e acessibilidade.
+- Rate limit, cache e seguranca para endpoints de IA.
 
 ## 3. Epico: Fundacao Django
 
@@ -67,8 +78,8 @@ Manter a base tecnica do projeto estavel, organizada e pronta para evolucao.
 - [x] Configurar SQLite local.
 - [x] Configurar Django Admin.
 - [x] Criar dados iniciais via management commands.
-- [ ] Preparar configuracao de producao com PostgreSQL.
-- [ ] Criar testes basicos de smoke.
+- [x] Preparar configuracao de producao com PostgreSQL.
+- [x] Criar testes basicos de smoke.
 - [ ] Criar checklist de deploy.
 
 ### Criterios de Aceite
@@ -229,8 +240,10 @@ Criar experiencia clara, progressiva e recompensadora.
 - [x] Exibir conteudo em ingles.
 - [x] Exibir vocabulario.
 - [x] Exibir botao de quiz.
+- [x] Adicionar explicacao de trecho selecionado.
 - [x] Permitir favoritar.
 - [x] Permitir marcar como lido.
+- [x] Exigir quiz do texto antes de liberar recompensa de leitura.
 - [ ] Definir regra final de login obrigatorio ou leitura aberta.
 - [ ] Melhorar mensagem de conclusao com Alexandrinho.
 
@@ -282,6 +295,8 @@ Medir entendimento do texto e recompensar desempenho.
 - [x] Exibir quiz ao final da leitura.
 - [x] Calcular acertos, erros e porcentagem.
 - [x] Mostrar feedback por desempenho.
+- [x] Mostrar quais perguntas o usuario acertou e errou.
+- [x] Bloquear repeticao do formulario apos resultado.
 - [ ] Revisar qualidade das perguntas.
 - [ ] Evitar recompensa cheia repetida em tentativas repetidas.
 
@@ -415,7 +430,94 @@ Permitir gerenciamento de conteudo pelo Django Admin.
 - Admin consegue publicar e arquivar conteudo.
 - Admin consegue associar vocabulario e imagens aos textos.
 
-## 17. Epico: Recomendacoes por Interesse
+## 17. Epico: API REST v1
+
+### Objetivo
+
+Expor dados essenciais do Lecto em JSON para atender integracoes, automacoes e requisitos de API REST.
+
+### Tarefas
+
+- [x] Adicionar `django-rest-framework`.
+- [x] Criar app `api_v1`.
+- [x] Criar serializers para `Text`, `VocabularyItem`, `TextQuizQuestion` e `TextQuizAnswer`.
+- [x] Criar endpoint `GET /api/v1/texts/`.
+- [x] Criar endpoint `GET /api/v1/texts/<slug>/`.
+- [x] Criar endpoint `GET /api/v1/vocabulary/`.
+- [x] Criar endpoint `GET /api/v1/text-quizzes/`.
+- [x] Criar endpoint `POST /api/v1/ai/explain/`.
+- [x] Configurar respostas como JSON.
+- [x] Criar testes de API.
+- [x] Adicionar documentacao OpenAPI/Swagger.
+- [ ] Adicionar paginacao explicita na API.
+- [ ] Definir autenticacao para endpoints sensiveis futuros.
+
+### Criterios de Aceite
+
+- Endpoints retornam JSON.
+- Textos publicados podem ser listados via API.
+- Vocabulario pode ser filtrado por texto.
+- Quizzes podem ser filtrados por texto.
+- Testes automatizados cobrem os endpoints principais.
+- Documentacao Swagger abre em `/api/v1/docs/`.
+
+## 18. Epico: IA e Explicacao de Trechos
+
+### Objetivo
+
+Permitir apoio inteligente na leitura e manter o recurso funcional mesmo sem chave externa de IA.
+
+### Tarefas
+
+- [x] Criar modulo `services/ai_engine.py`.
+- [x] Criar `generate_quiz_from_text`.
+- [x] Criar `analyze_text_difficulty`.
+- [x] Criar `explain_selection`.
+- [x] Integrar opcionalmente com OpenAI via `OPENAI_API_KEY`.
+- [x] Criar fallback local para explicacao sem chave de API.
+- [x] Usar glossario do texto no fallback local.
+- [x] Adicionar bloco de explicacao na pagina de leitura.
+- [x] Consumir `/api/v1/ai/explain/` com `fetch`.
+- [x] Criar testes com mocks/fallback.
+- [ ] Melhorar mini-dicionario local.
+- [ ] Adicionar cache por trecho explicado.
+- [ ] Adicionar limite de uso por usuario/IP.
+- [ ] Melhorar formatacao da explicacao no frontend.
+
+### Criterios de Aceite
+
+- Usuario seleciona trecho e recebe explicacao em portugues.
+- O recurso funciona sem `OPENAI_API_KEY`.
+- Quando houver chave, o servico pode usar LLM externo.
+- Testes nao dependem de chamadas externas.
+
+## 19. Epico: Automacao de Conteudo
+
+### Objetivo
+
+Reduzir trabalho manual de curadoria usando comandos controlados de automacao.
+
+### Tarefas
+
+- [x] Criar comando `automate_content`.
+- [x] Percorrer textos publicados sem quiz.
+- [x] Gerar perguntas via `ai_engine`.
+- [x] Criar `TextQuizQuestion` e `TextQuizAnswer`.
+- [x] Adicionar `--limit`.
+- [x] Adicionar `--dry-run`.
+- [x] Adicionar `--overwrite`.
+- [x] Criar teste com mock para fluxo de automacao.
+- [ ] Adicionar relatorio CSV/JSON das perguntas geradas.
+- [ ] Adicionar fila de revisao editorial antes de publicar perguntas.
+- [ ] Adicionar marcacao de origem IA/manual nas perguntas.
+
+### Criterios de Aceite
+
+- Comando gera quizzes sem quebrar textos existentes.
+- `--dry-run` simula sem gravar no banco.
+- Teste automatizado garante o fluxo principal.
+
+## 20. Epico: Recomendacoes por Interesse
 
 ### Objetivo
 
@@ -436,7 +538,7 @@ Usar interesses do usuario para sugerir textos relevantes.
 - Recomendacoes consideram interesses e nivel.
 - Usuario pode editar interesses.
 
-## 18. Epico: Qualidade, Responsividade e Acessibilidade
+## 21. Epico: Qualidade, Responsividade e Acessibilidade
 
 ### Objetivo
 
@@ -462,7 +564,7 @@ Garantir experiencia estavel, legivel e agradavel.
 - Formularios sao compreensiveis.
 - Estados vazios orientam o usuario.
 
-## 19. Epico: Performance e Deploy
+## 22. Epico: Performance e Deploy
 
 ### Objetivo
 
@@ -485,7 +587,7 @@ Preparar o Lecto para ambiente de producao.
 - Midias e estaticos carregam corretamente.
 - Dados sensiveis nao ficam hardcoded.
 
-## 20. Fases Futuras
+## 23. Fases Futuras
 
 - Audio completo dos textos gerado por IA.
 - Teste adaptativo completo.

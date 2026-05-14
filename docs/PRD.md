@@ -1,12 +1,12 @@
 # PRD - Lecto
 
-Atualizado em: 2026-05-05
+Atualizado em: 2026-05-14
 
 ## 1. Visao Geral
 
 O Lecto e um site em portugues para leitores brasileiros que querem praticar leitura em ingles com textos curtos, agradaveis e organizados por nivel de proficiencia.
 
-A plataforma oferece uma biblioteca progressiva de textos em ingles, filtros por nivel e categoria, vocabulario destacado, quizzes de compreensao, perfil de usuario, favoritos, progresso, moedinhas e avatar modular.
+A plataforma oferece uma biblioteca progressiva de textos em ingles, filtros por nivel e categoria, vocabulario destacado, quizzes de compreensao, explicacao de trechos, perfil de usuario, favoritos, progresso, moedinhas, avatar modular e uma camada inicial de API REST.
 
 O produto deve ser simples de usar, visualmente acolhedor e conectado a identidade do mascote Alexandrinho: um livro-personagem academico, simpatico e voltado para progresso de leitura.
 
@@ -18,6 +18,7 @@ Criar uma experiencia de leitura guiada para estudantes brasileiros, ajudando o 
 - Ler textos compativeis com sua proficiencia.
 - Evoluir gradualmente entre os niveis.
 - Aprender vocabulario novo com traducao, pronuncia escrita e exemplos.
+- Pedir explicacao de trechos selecionados na pagina de leitura.
 - Explorar temas de interesse como anime, HQs, games, tecnologia, cultura pop e cotidiano.
 - Criar conta, personalizar avatar e acompanhar progresso.
 - Ganhar moedinhas ao ler textos e responder quizzes.
@@ -217,6 +218,18 @@ Cada `AvatarOption` possui:
 
 O frontend deve sobrepor as camadas via CSS, permitindo personalizacao visual e gamificacao por itens gratuitos ou desbloqueaveis.
 
+### 8.6 Explicacao de Trechos
+
+A pagina de leitura possui um bloco de explicacao. O usuario seleciona um trecho do texto em ingles e solicita uma explicacao em portugues.
+
+Regras:
+
+- A funcionalidade consome o endpoint `/api/v1/ai/explain/` via `fetch`.
+- Quando houver `OPENAI_API_KEY`, o servico pode usar LLM externo para gerar explicacao.
+- Quando nao houver chave de API, o sistema usa fallback local com glossario do texto, mini-dicionario interno e regras simples de gramatica.
+- A explicacao deve retornar texto em portugues, palavras-chave e uma nota gramatical quando possivel.
+- A funcionalidade deve existir em todos os textos que usam a pagina padrao de leitura.
+
 ## 9. Paginas de Nivel e Categoria
 
 ### 9.1 Pagina de Nivel
@@ -266,6 +279,7 @@ Cada texto deve abrir uma pagina propria com:
 - Tempo estimado de leitura.
 - Imagem principal ou fallback visual.
 - Texto principal em ingles.
+- Bloco de explicacao de trecho selecionado.
 - Secao de vocabulario destacado.
 - Quiz de compreensao com 5 perguntas.
 - Acoes de favorito e conclusao de leitura.
@@ -352,7 +366,81 @@ O projeto possui comando para:
 
 O comando tambem gera manifesto de prompts para assets de avatar modular.
 
-## 14. Requisitos Funcionais
+## 14. API REST e Integracao com IA
+
+O Lecto permanece uma aplicacao Django SSR, mas agora possui uma camada adicional de API REST para atender integracoes, automacoes e requisitos de residencia.
+
+### 14.1 API REST v1
+
+Base URL:
+
+`/api/v1/`
+
+Endpoints atuais:
+
+- `GET /api/v1/schema/`
+- `GET /api/v1/docs/`
+- `GET /api/v1/texts/`
+- `GET /api/v1/texts/<slug>/`
+- `GET /api/v1/vocabulary/`
+- `GET /api/v1/vocabulary/?text=<slug>`
+- `GET /api/v1/text-quizzes/`
+- `GET /api/v1/text-quizzes/?text=<slug>`
+- `POST /api/v1/ai/explain/`
+
+Regras:
+
+- As respostas da API devem ser em JSON.
+- A API usa Django REST Framework.
+- A documentacao OpenAPI/Swagger e gerada com `drf-spectacular`.
+- O app responsavel pela camada REST e `api_v1`.
+- Os endpoints publicos atuais sao somente leitura, exceto o endpoint de explicacao.
+
+### 14.2 Servico de IA
+
+O modulo `services/ai_engine.py` centraliza funcoes de IA e fallback local.
+
+Funcoes principais:
+
+- `generate_quiz_from_text(text_content)`: gera 5 perguntas de multipla escolha.
+- `analyze_text_difficulty(text_content)`: calcula metricas simples de legibilidade e sugere nivel.
+- `explain_selection(selection, context="", glossary=None)`: explica um trecho selecionado em portugues.
+
+Comportamento esperado:
+
+- Se `OPENAI_API_KEY` estiver configurada, o servico pode chamar OpenAI.
+- Se nao houver chave, o sistema usa fallback local deterministico.
+- O fallback local deve continuar util para demonstracao, testes e deploy gratuito.
+
+### 14.3 Automacao de Conteudo
+
+O comando `automate_content` percorre textos publicados sem quiz e usa o `ai_engine` para criar perguntas automaticamente.
+
+Uso:
+
+- `python manage.py automate_content`
+- `python manage.py automate_content --limit 10`
+- `python manage.py automate_content --dry-run`
+- `python manage.py automate_content --overwrite`
+
+O comando popula:
+
+- `TextQuizQuestion`
+- `TextQuizAnswer`
+
+### 14.4 Testes Automatizados
+
+Foram adicionados testes para:
+
+- Endpoints REST retornarem JSON.
+- Schema OpenAPI e Swagger UI estarem disponiveis.
+- Endpoint de vocabulario filtrar por texto.
+- Endpoint de quiz retornar alternativas.
+- Fluxo de explicacao funcionar com fallback local.
+- Servico de IA gerar quiz sem depender de API externa.
+- Comando de automacao criar perguntas com mocks.
+
+## 15. Requisitos Funcionais
 
 ### RF01 - Listar Niveis
 
@@ -426,7 +514,19 @@ O sistema deve registrar textos iniciados, textos concluidos e data de leitura.
 
 Administradores devem conseguir gerenciar textos, categorias, niveis, vocabulario, quizzes, imagens e personagens.
 
-## 15. Requisitos Nao Funcionais
+### RF19 - API REST
+
+O sistema deve expor endpoints JSON para textos, vocabulario e quizzes de texto.
+
+### RF20 - Explicacao de Trechos
+
+O usuario deve conseguir selecionar um trecho de um texto e receber uma explicacao em portugues.
+
+### RF21 - Automacao de Quizzes
+
+Administradores devem conseguir gerar quizzes automaticamente para textos sem perguntas por meio de management command.
+
+## 16. Requisitos Nao Funcionais
 
 - O site deve ser responsivo para desktop, tablet e mobile.
 - A interface deve ser em portugues.
@@ -435,16 +535,20 @@ Administradores devem conseguir gerenciar textos, categorias, niveis, vocabulari
 - A leitura deve ter boa legibilidade, contraste e espacamento.
 - O projeto deve ser construido em Python com Django.
 - O frontend do MVP usa Django Templates, CSS proprio e JavaScript leve.
+- A camada REST usa Django REST Framework.
 - O banco local inicial e SQLite.
 - O banco recomendado para producao e PostgreSQL.
 - A pontuacao por moedas deve ser calculada no backend quando usuario estiver autenticado.
 - A geracao de imagens via API deve ser opcional e acionada por comando, nao automaticamente a cada request.
+- A integracao com LLM deve ser opcional e funcionar com fallback local quando nao houver chave de API.
+- Testes automatizados devem cobrir API, IA/fallback e comandos criticos.
 
-## 16. Arquitetura Tecnica
+## 17. Arquitetura Tecnica
 
 Stack:
 
 - Backend: Python + Django.
+- API REST: Django REST Framework.
 - Banco local: SQLite.
 - Banco recomendado para producao: PostgreSQL.
 - Frontend: Django Templates, HTML, CSS e JavaScript leve.
@@ -458,6 +562,8 @@ Apps:
 - `accounts`: cadastro, login, perfil e avatar modular.
 - `progress`: historico, favoritos, moedas e conquistas.
 - `media_assets`: espaco para evolucao de recursos visuais.
+- `api_v1`: endpoints REST em JSON para textos, vocabulario, quizzes e explicacao.
+- `services`: camada de servicos compartilhados, incluindo `ai_engine`.
 
 Management commands relevantes:
 
@@ -468,9 +574,10 @@ Management commands relevantes:
 - `import_text_cover`
 - `prune_text_catalog`
 - `refresh_text_illustrations`
+- `automate_content`
 - comandos `seed_*_stories` das categorias ativas.
 
-## 17. Modelo de Dados Principal
+## 18. Modelo de Dados Principal
 
 ### Level
 
@@ -571,7 +678,7 @@ Demais modelos principais:
 - `TextQuizAnswer`
 - `TextQuizAttempt`
 
-## 18. Identidade Visual
+## 19. Identidade Visual
 
 Mascote:
 
@@ -594,7 +701,7 @@ Direcao visual:
 - Componentes com bordas discretas e raio pequeno.
 - Imagens em estilo cartoon 2D, linhas limpas e boa legibilidade.
 
-## 19. Criterios de Aceite do MVP Atual
+## 20. Criterios de Aceite do MVP Atual
 
 - A home exibe identidade do Lecto, niveis, categorias e quiz.
 - Existem paginas para Iniciante, A1, A2, B1, B2, C1 e C2.
@@ -607,6 +714,7 @@ Direcao visual:
 - O usuario consegue filtrar categorias por nivel.
 - A categoria HQs permite filtrar por personagem.
 - Cada texto exibe conteudo em ingles, resumo em portugues, vocabulario e quiz.
+- Cada texto permite solicitar explicacao de um trecho selecionado.
 - Cada texto possui prompt de imagem.
 - Cada texto possui asset visual local.
 - Cards e paginas de leitura usam `cover_image` quando existir e `animation_asset` como fallback.
@@ -615,8 +723,11 @@ Direcao visual:
 - O avatar modular permite camadas e itens com preco em moedas.
 - O site funciona bem em mobile e desktop.
 - O conteudo pode ser gerenciado pelo Django Admin.
+- A API REST retorna JSON para textos, vocabulario e quizzes.
+- A documentacao Swagger/OpenAPI esta disponivel em `/api/v1/docs/` e `/api/v1/schema/`.
+- O fallback local de explicacao funciona mesmo sem chave externa de IA.
 
-## 20. Roadmap
+## 21. Roadmap
 
 ### Fase 1 - Fundacao
 
@@ -671,7 +782,20 @@ Status: pipeline implementado; geracao massiva depende de provedor externo/custo
 
 Status: pendente/em andamento.
 
-## 21. Metricas de Sucesso
+### Fase 6 - API, IA e Automacao
+
+- Criar API REST v1.
+- Documentar API com OpenAPI/Swagger.
+- Expor textos, vocabulario e quizzes em JSON.
+- Criar servico `ai_engine`.
+- Criar explicacao de trecho por endpoint.
+- Criar fallback local sem chave de API.
+- Criar comando `automate_content`.
+- Criar testes com mocks para IA e automacao.
+
+Status: implementado como base inicial; pendente endurecimento de seguranca, limites de uso, cache e revisao editorial automatizada.
+
+## 22. Metricas de Sucesso
 
 - Numero de textos lidos por usuario.
 - Taxa de conclusao do quiz.
@@ -679,6 +803,9 @@ Status: pendente/em andamento.
 - Niveis mais acessados.
 - Tempo medio na pagina de leitura.
 - Cliques em palavras de vocabulario.
+- Uso do recurso de explicacao de trechos.
+- Chamadas aos endpoints da API.
+- Quizzes gerados por automacao.
 - Quizzes de texto concluidos.
 - Media de acertos nos quizzes.
 - Textos favoritados.
@@ -686,7 +813,7 @@ Status: pendente/em andamento.
 - Avatares editados.
 - Retorno de usuarios para novos textos.
 
-## 22. Decisoes de Produto Confirmadas
+## 23. Decisoes de Produto Confirmadas
 
 1. A home e o quiz inicial podem ser acessados sem login.
 2. A leitura esta temporariamente aberta no MVP, mas a arquitetura permite exigir login depois.
@@ -698,3 +825,6 @@ Status: pendente/em andamento.
 8. HQs devem usar textos originais e imagens transformativas, evitando copia direta.
 9. O mascote se chama Alexandrinho.
 10. O MVP atual prioriza experiencia completa e catalogo enxuto, nao quantidade maxima.
+11. O projeto permanece SSR, mas passa a oferecer API REST v1 paralela.
+12. Recursos de IA devem funcionar com fallback local quando nao houver chave externa.
+13. Automacoes via management command devem ser opt-in, nunca executadas automaticamente a cada request.
